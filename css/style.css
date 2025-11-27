@@ -1,0 +1,368 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f5f5;
+    overflow: hidden;
+}
+
+#map {
+    flex: 1;
+    width: 100%;
+    height: 100% !important;
+}
+
+.controls {
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #2c7744, #5a9e6f);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.city-info h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.city-info p {
+    margin: 3px 0 0 0;
+    opacity: 0.9;
+    font-size: 13px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.action-buttons button {
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.95);
+    color: #2c7744;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex: 1;
+    min-width: 120px;
+}
+
+.action-buttons button:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stats-info {
+    display: flex;
+    gap: 15px;
+    font-size: 13px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    opacity: 0.8;
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.loading-spinner {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.95);
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 2000;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c7744;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2c7744;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Легенда */
+.legend {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-width: 180px;
+}
+
+.legend h4 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+    font-size: 11px;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    margin-right: 6px;
+    border: 1px solid #ddd;
+}
+
+/* Стили для всплывающего окна */
+.leaflet-popup-content {
+    margin: 12px;
+    min-width: 250px;
+    max-width: 90vw;
+}
+
+.popup-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c7744;
+    margin: 0 0 4px 0;
+}
+
+.popup-subtitle {
+    font-size: 11px;
+    color: #666;
+    margin: 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c7744;
+    display: block;
+}
+
+.stat-label-popup {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.indicators {
+    margin: 12px 0;
+}
+
+.indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.indicator:last-child {
+    border-bottom: none;
+}
+
+.indicator-name {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.indicator-value {
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.indicator-badge {
+    padding: 3px 6px;
+    border-radius: 10px;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.leaflet-attribution-flag {
+    display: none !important;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .controls {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .city-info h1 {
+        font-size: 18px;
+    }
+    
+    .city-info p {
+        font-size: 12px;
+    }
+    
+    .action-buttons {
+        gap: 8px;
+    }
+    
+    .action-buttons button {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-width: 100px;
+    }
+    
+    .stats-info {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .stat-item {
+        flex: 1;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+    }
+    
+    .legend {
+        max-width: 150px;
+        bottom: 10px;
+        left: 10px;
+        padding: 10px;
+    }
+    
+    .legend h4 {
+        font-size: 12px;
+    }
+    
+    .legend-item {
+        font-size: 10px;
+    }
+    
+    .legend-color {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .loading-spinner {
+        padding: 20px;
+        font-size: 14px;
+    }
+    
+    .spinner {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    
+    .city-info h1 {
+        font-size: 16px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .action-buttons button {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .stats-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .stat-item {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .legend {
+        max-width: 130px;
+        bottom: 8px;
+        left: 8px;
+        padding: 8px;
+    }
+}

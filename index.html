@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Карта доступности зелёных зон</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="controls">
+        <div class="city-info">
+            <h1>🏘️ Екатеринбург</h1>
+            <p>Карта доступности зелёных зон</p>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="loadQuarterData()">🗺️ Показать кварталы</button>
+            <button onclick="clearMap()">❌ Очистить карту</button>
+            <button onclick="showStatistics()">📊 Статистика</button>
+        </div>
+
+        <div class="stats-info">
+            <div class="stat-item">
+                <span class="stat-label">Загружено кварталов:</span>
+                <span class="stat-value" id="quarters-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Всего объектов:</span>
+                <span class="stat-value" id="total-objects">0</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+
+    <div id="loading" class="loading-spinner">
+        <div class="spinner"></div>
+        <div>Загрузка данных...</div>
+    </div>
+
+    <!-- Легенда -->
+    <div id="legend" class="legend">
+        <h4>Легенда (NDVI)</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #238823"></div>
+            <span>0.6+ - Отличное</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #7bc242"></div>
+            <span>0.4-0.6 - Хорошее</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #d6ce1f"></div>
+            <span>0.3-0.4 - Удовлетворительное</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #ff8c00"></div>
+            <span>0.2-0.3 - Плохое</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #d2222d"></div>
+            <span>&lt;0.2 - Очень плохое</span>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>
