@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Карта качества городских кварталов</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="controls">
+        <div class="city-selector">
+            <h1><i class="fas fa-city"></i> Выберите город</h1>
+            <div class="city-buttons">
+                <button class="city-btn" onclick="switchCity('moscow')">
+                    <i class="fas fa-building"></i> Москва
+                </button>
+                <button class="city-btn active" onclick="switchCity('ekaterinburg')">
+                    <i class="fas fa-building"></i> Екатеринбург
+                </button>
+                <button class="city-btn" onclick="switchCity('peter')">
+                    <i class="fas fa-building"></i> Санкт-Петербург
+                </button>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="toggle-quarters-btn" onclick="toggleQuarters()">
+                <i class="fas fa-eye"></i> Показать кварталы
+            </button>
+            <button onclick="showMethodology()">
+                <i class="fas fa-question-circle"></i> Методология
+            </button>
+        </div>
+
+        <div class="stats-info">
+            <div class="stat-item">
+                <span class="stat-label">Загружено кварталов:</span>
+                <span class="stat-value" id="quarters-count">0</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+
+    <div id="loading" class="loading-spinner">
+        <div class="spinner"></div>
+        <div>Загрузка данных...</div>
+    </div>
+
+    <!-- Легенда -->
+    <div id="legend" class="legend">
+        <h4><i class="fas fa-key"></i> Легенда качества</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #7fd968ff"></div>
+            <span>1 - Плохое качество</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #35b444ff"></div>
+            <span>2 - Нормальное качество</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #096f0eff"></div>
+            <span>3 - Хорошее качество</span>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>
