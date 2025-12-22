@@ -191,6 +191,7 @@ function processGeoJSONData(geoJsonData) {
     
     let validFeatures = 0;
     let invalidFeatures = 0;
+    let zeroPopulationFeatures = 0; // Счётчик полигонов с нулевым населением
     
     geoJsonData.features.forEach((feature, index) => {
         // Проверяем наличие координат в свойствах
@@ -200,6 +201,15 @@ function processGeoJSONData(geoJsonData) {
         // Если нет строки с координатами, пропускаем
         if (!coordsString || coordsString.trim() === '' || coordsString === 'null') {
             console.warn(`Объект ${index} пропущен: отсутствуют координаты`);
+            invalidFeatures++;
+            return;
+        }
+        
+        // ПАРСИНГ НАСЕЛЕНИЯ: проверяем, что население больше 0
+        const population = parseInt(properties.population || 0);
+        if (population <= 0) {
+            console.log(`Объект ${index} пропущен: население равно 0 или отсутствует (${population})`);
+            zeroPopulationFeatures++;
             invalidFeatures++;
             return;
         }
@@ -228,7 +238,7 @@ function processGeoJSONData(geoJsonData) {
                 id: properties.id || properties.quarter_id || `feature-${index}`,
                 name: properties.name || `Квартал ${index + 1}`,
                 area: parseFloat(properties.area || properties.area_m2 || 0),
-                population: parseInt(properties.population || 0),
+                population: population, // Используем уже распарсенное значение
                 general_ndvi: parseFloat(properties.general_ndvi || 0),
                 quality: parseInt(properties.quality || 0),
                 great_parks_count: parseInt(properties.great_parks_count || 0),
@@ -253,7 +263,7 @@ function processGeoJSONData(geoJsonData) {
         validFeatures++;
     });
     
-    console.log(`Обработано объектов: ${validFeatures} валидных, ${invalidFeatures} пропущено`);
+    console.log(`Обработано объектов: ${validFeatures} валидных, ${invalidFeatures} пропущено (из них ${zeroPopulationFeatures} с населением ≤ 0)`);
 }
 
 // Отрисовка кварталов на карте
@@ -498,4 +508,5 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Добавляем обработчик изменения размера окна
     window.addEventListener('resize', handleResize);
+
 });
