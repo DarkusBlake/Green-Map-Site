@@ -342,6 +342,11 @@ function initMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+
+    // Добавляем сокрытие панели при клике на пустое место карты
+    map.on('click', function (e) {
+        hideInfoPanel();
+    });
     
     // Добавляем поисковую строку
     addSearchControl();
@@ -622,6 +627,14 @@ function showInfoPanel(props) {
     `;
     
     panel.scrollTop = 0;
+}
+
+// Сокрытие информации в правой панели
+function hideInfoPanel() {
+    const panel = document.getElementById('info-panel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
 }
 
 function updateStatistics(features) {
