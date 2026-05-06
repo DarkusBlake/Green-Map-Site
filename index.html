@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Карта качества городских кварталов</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Библиотека поиска (OSI/Nominatim) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="controls">
+        <div class="city-selector">
+            <h1><i class="fas fa-city"></i> Выберите город</h1>
+            <div class="city-buttons">
+                <button class="city-btn" onclick="switchCity('moscow')">Москва</button>
+                <button class="city-btn active" onclick="switchCity('ekaterinburg')">Екатеринбург</button>
+                <button class="city-btn" onclick="switchCity('peter')">Санкт-Петербург</button>
+            </div>
+        </div>
+
+        <!-- 4) Меню режимов карты -->
+        <div class="mode-menu">
+            <button class="mode-btn active" onclick="switchMode('green')">
+                <i class="fas fa-leaf"></i> Зелёные зоны
+            </button>
+            <button class="mode-btn" onclick="switchMode('light')">
+                <i class="fas fa-lightbulb"></i> Световая карта
+            </button>
+        </div>
+        
+        <div class="action-buttons">
+            <button id="toggle-quarters-btn" onclick="toggleQuarters()">
+                <i class="fas fa-eye"></i> Показать кварталы
+            </button>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+
+    <!-- 3) Статичное окно информации в правом углу -->
+    <div id="info-panel" class="info-panel">
+        <div class="info-placeholder">Нажмите на квартал, чтобы увидеть детали</div>
+    </div>
+
+    <div id="loading" class="loading-spinner">
+        <div class="spinner"></div>
+        <div>Загрузка данных...</div>
+    </div>
+
+    <div id="legend" class="legend">
+        <h4>Легенда качества</h4>
+        <div class="legend-item"><div class="legend-color" style="background-color: #7fd968ff"></div><span>1 - Плохое</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color: #35b444ff"></div><span>2 - Нормальное</span></div>
+        <div class="legend-item"><div class="legend-color" style="background-color: #096f0eff"></div><span>3 - Хорошее</span></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
