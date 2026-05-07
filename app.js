@@ -24,7 +24,7 @@ const cityData = {
         name: 'Санкт-Петербург',
         center: [59.9343, 30.3351],
         zoom: 11,
-        url: 'https://backendprojectsber-vladpimanov5834-q17o0eqs.leapcell.dev/quarters?city=petersburg'
+        url: 'https://backendprojectsber-vladpimanov5834-q17o0eqs.leapcell.dev/quarters?city=saint-petersburg'
     }
 };
 
