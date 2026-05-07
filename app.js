@@ -345,7 +345,12 @@ function initMap() {
 
     // Добавляем сокрытие панели при клике на пустое место карты
     map.on('click', function (e) {
-        hideInfoPanel();
+        setTimeout(() => {
+            if (!window.isClickOnQuarter) {
+                hideInfoPanel();
+            }
+            window.isClickOnQuarter = false;
+        }, 10);
     });
     
     // Добавляем поисковую строку
@@ -513,7 +518,13 @@ async function loadCityData() {
                     direction: 'center'
                 });
                 
-                layer.on('click', function(e) {
+                layer.on('click', function (e) {
+                    window.isClickOnQuarter = true;
+
+                    if (e.originalEvent) {
+                        L.DomEvent.stopPropagation(e.originalEvent);
+                    }
+
                     showInfoPanel(feature.properties);
                     L.DomEvent.stopPropagation(e);
                     
