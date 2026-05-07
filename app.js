@@ -4,6 +4,7 @@ let allQuarters = [];
 let currentCity = 'ekaterinburg';
 let currentMode = 'green';
 let searchControl = null;
+let currentFeatures = [];
 
 // Ссылки на бэкенд
 const cityData = {
@@ -23,7 +24,7 @@ const cityData = {
         name: 'Санкт-Петербург',
         center: [59.9343, 30.3351],
         zoom: 11,
-        url: 'https://backendprojectsber-vladpimanov5834-q17o0eqs.leapcell.dev/quarters?city=spb'
+        url: 'https://backendprojectsber-vladpimanov5834-q17o0eqs.leapcell.dev/quarters?city=petersburg'
     }
 };
 
@@ -31,18 +32,15 @@ const cityData = {
 function calculateQuality(feature) {
     const props = feature.properties;
     
-    // Если качество уже задано корректно (1,2,3), используем его
     if (props.quality >= 1 && props.quality <= 3) {
         return props.quality;
     }
     
-    // Иначе рассчитываем на основе NDVI и плотности зелёных зон
     const ndvi = props.general_ndvi || 0;
     const greenDensity = props.population_density_per_green_zone || 0;
     
     let score = 0;
     
-    // Критерий 1: NDVI (индекс растительности)
     if (ndvi >= 0.65) {
         score += 2;
     } else if (ndvi >= 0.55) {
@@ -53,7 +51,6 @@ function calculateQuality(feature) {
         score -= 1;
     }
     
-    // Критерий 2: Плотность населения по отношению к зелёным зонам
     if (greenDensity === 0) {
         score += 1;
     } else if (greenDensity < 10) {
@@ -66,7 +63,6 @@ function calculateQuality(feature) {
         score -= 2;
     }
     
-    // Критерий 3: Общая площадь зелёных зон
     const totalParksArea = (props.great_parks_area || 0) + 
                           (props.good_parks_area || 0) + 
                           (props.ok_parks_area || 0);
@@ -83,7 +79,6 @@ function calculateQuality(feature) {
         score -= 1;
     }
     
-    // Итоговое определение качества
     if (score >= 2) {
         return 3;
     } else if (score >= 0) {
@@ -113,9 +108,7 @@ function getQualityText(quality) {
 
 // ========== ПОИСКОВАЯ СТРОКА ==========
 
-// Добавление поискового контрола на карту
 function addSearchControl() {
-    // Создаём кастомный поисковый контрол
     const SearchControl = L.Control.extend({
         options: {
             position: 'topleft'
@@ -131,7 +124,6 @@ function addSearchControl() {
             container.style.alignItems = 'center';
             container.style.gap = '5px';
             
-            // Поле ввода
             this.input = L.DomUtil.create('input', 'search-input', container);
             this.input.type = 'text';
             this.input.placeholder = '🔍 Поиск адреса или места...';
@@ -142,7 +134,6 @@ function addSearchControl() {
             this.input.style.width = '250px';
             this.input.style.borderRadius = '3px';
             
-            // Кнопка поиска
             this.button = L.DomUtil.create('button', 'search-button', container);
             this.button.innerHTML = '🔍';
             this.button.style.padding = '8px 12px';
@@ -153,16 +144,13 @@ function addSearchControl() {
             this.button.style.cursor = 'pointer';
             this.button.style.fontSize = '14px';
             
-            // Запрещаем всплытие событий, чтобы клик по контролу не закрывал попапы
             L.DomEvent.disableClickPropagation(container);
             L.DomEvent.disableScrollPropagation(container);
             
-            // Обработчик кнопки
             this.button.onclick = () => {
                 this.search();
             };
             
-            // Обработчик Enter в поле ввода
             this.input.onkeypress = (e) => {
                 if (e.key === 'Enter') {
                     this.search();
@@ -182,7 +170,6 @@ function addSearchControl() {
             console.log('Поиск:', query);
             showLoading();
             
-            // Используем Nominatim API для поиска
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&lang=ru`;
             
             fetch(url, {
@@ -210,14 +197,11 @@ function addSearchControl() {
         }
     });
     
-    // Добавляем поисковый контрол на карту
     searchControl = new SearchControl();
     searchControl.addTo(map);
 }
 
-// Отображение результатов поиска
 function showSearchResults(results) {
-    // Удаляем старый слой с результатами, если есть
     if (window.searchMarkersLayer) {
         map.removeLayer(window.searchMarkersLayer);
     }
@@ -227,19 +211,15 @@ function showSearchResults(results) {
         return;
     }
     
-    // Создаём слой для маркеров результатов
     window.searchMarkersLayer = L.layerGroup().addTo(map);
     
-    // Создаём попап со списком результатов
     let resultsHtml = '<div style="max-height: 300px; overflow-y: auto;"><strong>Результаты поиска:</strong><ul style="list-style: none; padding: 0; margin: 10px 0;">';
     
     results.forEach((result, index) => {
         const lat = parseFloat(result.lat);
         const lon = parseFloat(result.lon);
         const displayName = result.display_name;
-        const type = result.type;
         
-        // Добавляем маркер на карту
         const marker = L.marker([lat, lon], {
             icon: L.divIcon({
                 className: 'search-marker',
@@ -271,7 +251,6 @@ function showSearchResults(results) {
     
     resultsHtml += '</ul></div>';
     
-    // Показываем результаты во всплывающем окне на карте
     const firstResult = results[0];
     const lat = parseFloat(firstResult.lat);
     const lon = parseFloat(firstResult.lon);
@@ -281,7 +260,6 @@ function showSearchResults(results) {
         .setContent(resultsHtml)
         .openOn(map);
     
-    // Автоматически зуммируем к первому результату
     setTimeout(() => {
         const bounds = window.searchMarkersLayer.getBounds();
         if (bounds.isValid()) {
@@ -292,11 +270,9 @@ function showSearchResults(results) {
     }, 100);
 }
 
-// Глобальная функция для перехода к месту
 window.zoomToLocation = function(lat, lon, name) {
     map.setView([lat, lon], 17);
     
-    // Добавляем временный маркер с анимацией
     const marker = L.marker([lat, lon], {
         icon: L.divIcon({
             className: 'temp-marker',
@@ -308,12 +284,10 @@ window.zoomToLocation = function(lat, lon, name) {
     .bindPopup(`<strong>${name}</strong><br>Вы перешли к этому месту`)
     .addTo(map);
     
-    // Удаляем маркер через 3 секунды
     setTimeout(() => {
         map.removeLayer(marker);
     }, 3000);
     
-    // Добавляем CSS анимацию
     if (!document.querySelector('#pulse-animation')) {
         const style = document.createElement('style');
         style.id = 'pulse-animation';
@@ -338,33 +312,30 @@ function initMap() {
         closePopupOnClick: false
     }).setView(city.center, city.zoom);
 
-    // Базовый слой карты
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Добавляем сокрытие панели при клике на пустое место карты
+    // Исправлено: показываем дефолтную панель сразу, без задержки
     map.on('click', function (e) {
+        // Сбрасываем флаг клика по кварталу
+        if (!window.isClickOnQuarter) {
+            showDefaultPanel();
+        }
+        // Сбрасываем флаг после обработки
         setTimeout(() => {
-            if (!window.isClickOnQuarter) {
-                hideInfoPanel();
-            }
             window.isClickOnQuarter = false;
-        }, 10);
+        }, 50);
     });
     
-    // Добавляем поисковую строку
     addSearchControl();
     
-    // Добавляем контрол зума (если его нет)
     L.control.zoom({
         position: 'topleft'
     }).addTo(map);
     
-    // Загружаем данные города
     loadCityData();
     
-    // Добавляем обработчик зума
     map.on('zoomend', function() {
         if (quartersLayer) {
             const zoom = map.getZoom();
@@ -379,7 +350,23 @@ function initMap() {
     });
 }
 
-// ========== ГЛОБАЛЬНЫЕ ФУНКЦИИ (доступны из HTML) ==========
+// Функция для отображения дефолтной панели
+function showDefaultPanel() {
+    const panel = document.getElementById('info-panel');
+    if (!panel) return;
+    
+    panel.style.display = 'block';
+    panel.innerHTML = `
+        <div class="info-placeholder">
+            <i class="fas fa-map-marker-alt"></i>
+            <p>Кликните по кварталу, чтобы увидеть подробную информацию</p>
+            <br>
+            <small>💡 Используйте поиск в левом верхнем углу</small>
+        </div>
+    `;
+}
+
+// ========== ГЛОБАЛЬНЫЕ ФУНКЦИИ ==========
 
 window.switchCity = async function(city) {
     console.log('Переключение на город:', city);
@@ -394,8 +381,24 @@ window.switchCity = async function(city) {
     
     showLoading();
     const cityInfo = cityData[currentCity];
+    
+    // Сначала показываем дефолтную панель
+    showDefaultPanel();
+    
+    // Устанавливаем вид с правильным зумом
     map.setView(cityInfo.center, cityInfo.zoom);
+    
+    // Загружаем данные
     await loadCityData();
+    
+    // После загрузки не делаем fitBounds, чтобы сохранить установленный зум
+    // Просто применяем текущий режим
+    if (currentMode === 'light' && quartersLayer) {
+        map.removeLayer(quartersLayer);
+    } else if (currentMode === 'green' && quartersLayer && !map.hasLayer(quartersLayer)) {
+        map.addLayer(quartersLayer);
+    }
+    
     hideLoading();
 };
 
@@ -412,7 +415,6 @@ window.switchMode = function(mode) {
             map.addLayer(quartersLayer);
         }
         
-        // Возвращаем стандартный слой
         map.eachLayer(layer => {
             if (layer instanceof L.TileLayer && layer._url.includes('cartocdn')) {
                 map.removeLayer(layer);
@@ -427,17 +429,17 @@ window.switchMode = function(mode) {
             window.defaultTileLayer.addTo(map);
         }
         
+        showDefaultPanel();
+        
     } else if (mode === 'light') {
         if (quartersLayer && map.hasLayer(quartersLayer)) {
             map.removeLayer(quartersLayer);
         }
         
-        // Удаляем стандартный слой
         if (window.defaultTileLayer) {
             map.removeLayer(window.defaultTileLayer);
         }
         
-        // Добавляем светлый слой
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -473,7 +475,6 @@ window.toggleQuarters = function() {
     }
 };
 
-// Загрузка данных с бэкенда
 async function loadCityData() {
     try {
         showLoading();
@@ -498,6 +499,8 @@ async function loadCityData() {
             }))
         };
         
+        currentFeatures = enrichedData.features;
+        
         quartersLayer = L.geoJSON(enrichedData, {
             style: function(feature) {
                 const quality = feature.properties.calculated_quality;
@@ -520,7 +523,7 @@ async function loadCityData() {
                 
                 layer.on('click', function (e) {
                     window.isClickOnQuarter = true;
-
+                    
                     if (e.originalEvent) {
                         L.DomEvent.stopPropagation(e.originalEvent);
                     }
@@ -544,14 +547,8 @@ async function loadCityData() {
             }
         }).addTo(map);
         
-        if (enrichedData.features.length > 0 && currentMode === 'green') {
-            const bounds = quartersLayer.getBounds();
-            if (bounds.isValid() && map.getZoom() > 10) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-        }
-        
-        updateStatistics(enrichedData.features);
+        // Убираем автоматический fitBounds
+        console.log(`Загружено ${enrichedData.features.length} кварталов`);
         
         if (currentMode === 'light') {
             map.removeLayer(quartersLayer);
@@ -574,9 +571,12 @@ async function loadCityData() {
     }
 }
 
-// Отображение информации в правой панели
 function showInfoPanel(props) {
     const panel = document.getElementById('info-panel');
+    if (!panel) return;
+    
+    panel.style.display = 'block';
+    
     const quality = props.calculated_quality || calculateQuality({ properties: props });
     const qualityText = getQualityText(quality);
     
@@ -640,51 +640,6 @@ function showInfoPanel(props) {
     panel.scrollTop = 0;
 }
 
-// Сокрытие информации в правой панели
-function hideInfoPanel() {
-    const panel = document.getElementById('info-panel');
-    if (panel) {
-        panel.style.display = 'none';
-    }
-}
-
-function updateStatistics(features) {
-    if (!features || features.length === 0) return;
-    
-    let totalPopulation = 0;
-    let totalArea = 0;
-    let qualityCount = { 1: 0, 2: 0, 3: 0 };
-    
-    features.forEach(feature => {
-        const quality = feature.properties.calculated_quality;
-        totalPopulation += feature.properties.population || 0;
-        totalArea += feature.properties.area || 0;
-        if (quality >= 1 && quality <= 3) {
-            qualityCount[quality]++;
-        }
-    });
-    
-    const statsHtml = `
-        <div class="stat-item">
-            <span class="stat-label"><i class="fas fa-users"></i> Всего жителей</span>
-            <span class="stat-value">${totalPopulation.toLocaleString()}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label"><i class="fas fa-draw-polygon"></i> Кварталов</span>
-            <span class="stat-value">${features.length}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label"><i class="fas fa-chart-pie"></i> Качество</span>
-            <span class="stat-value">😊 ${qualityCount[3]} / 😐 ${qualityCount[2]} / ☹️ ${qualityCount[1]}</span>
-        </div>
-    `;
-    
-    const statsContainer = document.querySelector('.stats-info');
-    if (statsContainer) {
-        statsContainer.innerHTML = statsHtml;
-    }
-}
-
 function showLoading() {
     const spinner = document.getElementById('loading');
     if (spinner) {
@@ -699,7 +654,6 @@ function hideLoading() {
     }
 }
 
-// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
     
