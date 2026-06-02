@@ -1,0 +1,493 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.leaflet-attribution-flag {
+    display: none !important;
+}
+
+.search-control-custom {
+    margin-bottom: 10px !important;
+}
+
+/* Убедимся, что контролы не накладываются */
+.leaflet-control-zoom {
+    clear: both;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 600px) {
+    .search-control-custom input {
+        width: 180px !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+    .search-control-custom button {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+}
+
+.controls {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-bottom: 2px solid #e0e0e0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.city-selector {
+    margin-bottom: 15px;
+}
+
+.city-selector h1 {
+    font-size: 1.4rem;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.city-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.city-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 20px;
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.city-btn:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.city-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons button {
+    flex: 1;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.action-buttons button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+/* Карта */
+#map {
+    flex: 1;
+    min-height: 400px;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Новая панель слоёв - справа, над легендой */
+.layers-panel {
+    position: fixed;
+    bottom: 200px;
+    right: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    min-width: 180px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.layers-panel h4 {
+    margin-bottom: 12px;
+    color: #2c3e50;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.layer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.layer-item span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Переключатель (свитч) */
+.layer-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.layer-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #4CAF50;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* Статичная панель информации (правый верхний угол) */
+.info-panel {
+    position: fixed;
+    margin-top: 200px;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    background: white;
+    z-index: 1001;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    font-family: 'Inter', sans-serif;
+}
+
+.info-placeholder {
+    color: #888;
+    text-align: center;
+    font-style: italic;
+    padding: 20px 0;
+}
+
+/* Детальная информация в панели (при клике на квартал) */
+.info-details {
+    animation: fadeIn 0.3s ease;
+}
+
+.info-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 150px;
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c7744;
+}
+
+#map {
+    flex: 1;
+    min-height: 400px;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Легенда */
+.legend {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 250px;
+    border: 2px solid #e0e0e0;
+}
+
+.legend h4 {
+    margin-bottom: 12px;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+}
+
+/* Стили для парков (зелёные зоны) */
+.parks-layer-high {
+    fillColor: '#1a9850';
+    color: '#1a9850';
+    weight: 1;
+    opacity: 0.8;
+    fillOpacity: 0.6;
+}
+.parks-layer-medium {
+    fillColor: '#fee08b';
+    color: '#fee08b';
+    weight: 1;
+    opacity: 0.8;
+    fillOpacity: 0.6;
+}
+.parks-layer-low {
+    fillColor: '#d73027';
+    color: '#d73027';
+    weight: 1;
+    opacity: 0.8;
+    fillOpacity: 0.6;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .controls {
+        padding: 10px;
+    }
+    
+    .city-selector h1 {
+        font-size: 1.2rem;
+    }
+    
+    .city-btn {
+        min-width: 100px;
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons button {
+        padding: 12px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .stat-item {
+        min-width: 120px;
+        padding: 10px;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+    }
+    
+    .legend {
+        bottom: 10px;
+        right: 10px;
+        max-width: 200px;
+        padding: 10px;
+    }
+    
+    .layers-panel {
+        bottom: 100px;
+        right: 10px;
+        min-width: 160px;
+        padding: 10px;
+    }
+    
+    .legend h4 {
+        font-size: 1rem;
+    }
+}
+
+.custom-search {
+    background: white !important;
+    padding: 5px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65) !important;
+    display: flex !important;
+    gap: 5px !important;
+}
+
+.custom-search input {
+    padding: 8px 12px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    font-size: 14px !important;
+    width: 220px !important;
+    outline: none !important;
+}
+
+.custom-search input:focus {
+    border-color: #4CAF50 !important;
+}
+
+.custom-search button {
+    padding: 8px 12px !important;
+    background: #4CAF50 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+}
+
+.custom-search button:hover {
+    background: #45a049 !important;
+}
+
+/* Адаптация поиска для мобильных */
+@media (max-width: 600px) {
+    .custom-search input {
+        width: 160px !important;
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+    }
+    .custom-search button {
+        padding: 6px 10px !important;
+    }
+}
+
+/* ========== СТИЛИ ДЛЯ МАРКЕРОВ ПОИСКА ========== */
+.search-marker {
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    font-weight: bold;
+}
+
+.temp-marker {
+    animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* ========== СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ ОКОН ========== */
+.leaflet-popup-content {
+    min-width: 200px;
+    font-size: 13px;
+}
+
+.leaflet-popup-content button {
+    width: 100%;
+    padding: 5px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.leaflet-popup-content button:hover {
+    background: #45a049;
+}
