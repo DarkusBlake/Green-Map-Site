@@ -1,6 +1,3 @@
-// js/layers.js
-// Управление слоями карты
-
 window.LayerManager = (function() {
     let map = null;
     let quartersLayer = null;
@@ -38,19 +35,14 @@ window.LayerManager = (function() {
         }
         
         if (roadsCheckbox) {
-            roadsCheckbox.addEventListener('change', (e) => {
-                if (roadsLayer) {
-                    if (e.target.checked) map.addLayer(roadsLayer);
-                    else map.removeLayer(roadsLayer);
-                } else if (e.target.checked) {
-                    loadRoadsMockData();
+            roadsCheckbox.addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    if (!roadsLayer) await loadRoads();
+                    if (roadsLayer) map.addLayer(roadsLayer);
+                } else {
+                    if (roadsLayer) map.removeLayer(roadsLayer);
                 }
             });
-        }
-        
-        const toggleBtn = document.getElementById('toggle-quarters-btn');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', toggleQuarters);
         }
     }
     
@@ -145,11 +137,22 @@ window.LayerManager = (function() {
             if (parksLayer && map) map.removeLayer(parksLayer);
             
             parksLayer = L.geoJSON(data, {
-                style: Utils.getParkStyle,
+                style: {
+                    fillColor: '#4CAF50',
+                    color: '#4CAF50',
+                    weight: 1,
+                    opacity: 0.8,
+                    fillOpacity: 0.6
+                },
                 onEachFeature: function(feature, layer) {
-                    const props = feature.properties;
-                    const ndvi = props.ndvi?.toFixed(2) || '?';
-                    layer.bindTooltip(`Парк: ${props.quality_class || 'обычный'} (NDVI: ${ndvi})`, { sticky: true });
+                    const ndvi = feature.properties.ndvi?.toFixed(2) || '?';
+                    const area = feature.properties.area ? Math.round(feature.properties.area).toLocaleString() : '?';
+                    layer.bindTooltip(`Парк (NDVI: ${ndvi})`, { sticky: true });
+                    
+                    layer.on('click', function(e) {
+                        L.DomEvent.stopPropagation(e);
+                        UI.showParkInfo(feature.properties);
+                    });
                 }
             });
             
@@ -166,35 +169,43 @@ window.LayerManager = (function() {
         }
     }
     
-    async function loadRoadsMockData() {
-        if (roadsLayer) return;
-        
-        const mockRoadsGroup = L.layerGroup();
-        L.popup()
-            .setLatLng(map.getCenter())
-            .setContent('<div style="padding:10px"><strong>Оценка дорог</strong><br>Функционал в разработке.<br>API для дорог будет добавлено позже.</div>')
-            .openOn(map);
-        
-        roadsLayer = mockRoadsGroup;
-        if (document.getElementById('layer-roads-checkbox')?.checked) {
-            map.addLayer(roadsLayer);
-        }
-    }
-    
-    function toggleQuarters() {
-        const btn = document.getElementById('toggle-quarters-btn');
-        const chk = document.getElementById('layer-quarters-checkbox');
-        
-        if (quartersLayer) {
-            if (map.hasLayer(quartersLayer)) {
-                map.removeLayer(quartersLayer);
-                btn.innerHTML = '<i class="fas fa-eye-slash"></i> Показать кварталы';
-                if (chk) chk.checked = false;
-            } else {
-                map.addLayer(quartersLayer);
-                btn.innerHTML = '<i class="fas fa-eye"></i> Скрыть кварталы';
-                if (chk) chk.checked = true;
+    async function loadRoads() {
+        try {
+            const response = await fetch('https://backend-project-sber.onrender.com/roads');
+            if (!response.ok) throw new Error('Ошибка загрузки дорог');
+            const data = await response.json();
+            
+            if (roadsLayer) map.removeLayer(roadsLayer);
+            
+            roadsLayer = L.geoJSON(data, {
+                style: function(feature) {
+                    let maxScore = 0;
+                    for (const key in feature.properties) {
+                        const val = parseFloat(feature.properties[key]);
+                        if (!isNaN(val) && val > maxScore) maxScore = val;
+                    }
+                    const intensity = Math.min(1, Math.max(0, maxScore));
+                    const r = Math.floor(255 * (1 - intensity));
+                    const g = Math.floor(255 * intensity);
+                    const b = 0;
+                    return {
+                        color: `rgb(${r}, ${g}, ${b})`,
+                        weight: 3,
+                        opacity: 0.8
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.bindTooltip(`Дорога (оценка: ${feature.properties.quality || 'средняя'})`, { sticky: true });
+                }
+            });
+            
+            const isChecked = document.getElementById('layer-roads-checkbox')?.checked;
+            if (isChecked) {
+                map.addLayer(roadsLayer);
             }
+        } catch (err) {
+            console.error("Ошибка загрузки дорог:", err);
+            UI.showError('Не удалось загрузить слой дорог');
         }
     }
     
@@ -212,8 +223,7 @@ window.LayerManager = (function() {
         init,
         loadQuarters,
         loadParks,
-        loadRoadsMockData,
-        toggleQuarters,
+        loadRoads,
         hideAllLayers,
         getQuartersLayer,
         getParksLayer,

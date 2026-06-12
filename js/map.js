@@ -2,13 +2,13 @@ window.MapManager = (function() {
     let map = null;
     let currentTileLayer = null;
     
-    // Список запасных серверов (французский - основной)
+    // Список серверов: стандартный OSM первым, остальные запасные
     const tileServers = [
-        { url: 'https://tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', name: 'OSM France' },        // французский (основной)
-        { url: 'https://tiles.wmflabs.org/osm/{z}/{x}/{y}.png', name: 'WMFLabs' },                  // сервер Wikimedia
-        { url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', name: 'OSM Germany' },              // немецкий сервер
-        { url: 'https://tiles.nakarte.me/{z}/{x}/{y}.png', name: 'Nakarte.me' },                    // российский форк
-        { url: 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png', name: 'OSM Default' }            // стандартный (на всякий случай)
+        { url: 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png', name: 'OSM Default' },
+        { url: 'https://tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', name: 'OSM France' },
+        { url: 'https://tiles.wmflabs.org/osm/{z}/{x}/{y}.png', name: 'WMFLabs' },
+        { url: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png', name: 'OSM Germany' },
+        { url: 'https://tiles.nakarte.me/{z}/{x}/{y}.png', name: 'Nakarte.me' }
     ];
     
     let serverIndex = 0;
@@ -21,7 +21,7 @@ window.MapManager = (function() {
             closePopupOnClick: false
         }).setView(cityData.center, cityData.zoom);
         
-        // Пытаемся загрузить тайлы с первого сервера (французский)
+        // Пытаемся загрузить тайлы с первого сервера (стандартный OSM)
         loadTileServer(0);
         
         // Контрол зума
@@ -50,7 +50,7 @@ window.MapManager = (function() {
             }
         });
         
-        console.log('MapManager инициализирован (французский сервер)');
+        console.log('MapManager инициализирован (стандартный OSM)');
         return map;
     }
     
@@ -82,7 +82,6 @@ window.MapManager = (function() {
     
     function getMap() { return map; }
     
-    // Функция для обновления вида при смене города
     function updateViewForCity(cityId, cityData) {
         if (map) {
             map.setView(cityData.center, cityData.zoom);
@@ -90,7 +89,6 @@ window.MapManager = (function() {
         }
     }
     
-    // Переключение на световую карту
     function switchToLightMode() {
         if (currentTileLayer) {
             map.removeLayer(currentTileLayer);
@@ -101,7 +99,6 @@ window.MapManager = (function() {
             maxZoom: 19
         }).addTo(map);
         
-        // Скрываем кварталы при световой карте
         const quartersLayer = window.LayerManager ? LayerManager.getQuartersLayer() : null;
         if (quartersLayer && map.hasLayer(quartersLayer)) {
             map.removeLayer(quartersLayer);
@@ -110,19 +107,15 @@ window.MapManager = (function() {
         if (window.UI) UI.showLightModeMessage();
     }
     
-    // Переключение обратно на зелёную карту
     function switchToGreenMode() {
-        // Удаляем световую карту
         map.eachLayer(layer => {
             if (layer instanceof L.TileLayer && layer._url && layer._url.includes('cartocdn')) {
                 map.removeLayer(layer);
             }
         });
         
-        // Возвращаем обычную карту (начинаем с французского сервера)
         loadTileServer(0);
         
-        // Показываем кварталы если чекбокс включён
         const quartersLayer = window.LayerManager ? LayerManager.getQuartersLayer() : null;
         const isChecked = document.getElementById('layer-quarters-checkbox')?.checked;
         if (quartersLayer && isChecked && !map.hasLayer(quartersLayer)) {

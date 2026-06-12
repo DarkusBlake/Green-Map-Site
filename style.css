@@ -8,26 +8,21 @@
     display: none !important;
 }
 
-.search-control-custom {
-    margin-bottom: 10px !important;
+.leaflet-top.leaflet-left {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
 }
 
-/* Убедимся, что контролы не накладываются */
-.leaflet-control-zoom {
-    clear: both;
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+    order: 1;
+    margin-bottom: 0;
 }
 
-/* Адаптация для мобильных */
-@media (max-width: 600px) {
-    .search-control-custom input {
-        width: 180px !important;
-        padding: 8px 10px !important;
-        font-size: 12px !important;
-    }
-    .search-control-custom button {
-        padding: 8px 12px !important;
-        font-size: 12px !important;
-    }
+.leaflet-top.leaflet-left .leaflet-bar {
+    order: 2;
+    margin-bottom: 0;
 }
 
 body {
@@ -124,7 +119,6 @@ body {
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
-/* Карта */
 #map {
     flex: 1;
     min-height: 400px;
@@ -132,7 +126,6 @@ body {
     z-index: 1;
 }
 
-/* Новая панель слоёв - справа, над легендой */
 .layers-panel {
     position: fixed;
     bottom: 200px;
@@ -174,7 +167,6 @@ body {
     gap: 8px;
 }
 
-/* Переключатель (свитч) */
 .layer-switch {
     position: relative;
     display: inline-block;
@@ -220,10 +212,9 @@ input:checked + .slider:before {
     transform: translateX(20px);
 }
 
-/* Статичная панель информации (правый верхний угол) */
 .info-panel {
     position: fixed;
-    margin-top: 200px;
+    margin-top: 170px;
     top: 20px;
     right: 20px;
     width: 320px;
@@ -245,7 +236,6 @@ input:checked + .slider:before {
     padding: 20px 0;
 }
 
-/* Детальная информация в панели (при клике на квартал) */
 .info-details {
     animation: fadeIn 0.3s ease;
 }
@@ -259,35 +249,101 @@ input:checked + .slider:before {
     padding-bottom: 10px;
 }
 
-.stat-item {
+/* Новые стили для статистики */
+.info-stats {
+    display: flex;
+    gap: 12px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.info-stat-card {
     flex: 1;
-    min-width: 150px;
-    background: white;
+    background: #f8f9fa;
+    border-radius: 12px;
     padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #e0e0e0;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.stat-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.3rem;
+.info-stat-number {
+    font-size: 1.5rem;
     font-weight: 700;
-    color: #2c7744;
+    color: #2c3e50;
 }
 
-#map {
-    flex: 1;
-    min-height: 400px;
+.info-stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quality-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 10px 0;
+}
+
+.quality-badge.level-1 {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.quality-badge.level-2 {
+    background: #fff8e1;
+    color: #f57f17;
+}
+
+.quality-badge.level-3 {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.parks-table {
     width: 100%;
-    z-index: 1;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.85rem;
+}
+
+.parks-table th {
+    background: #e9ecef;
+    padding: 8px;
+    text-align: left;
+}
+
+.parks-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.parks-table tr:hover {
+    background: #f1f3f5;
+}
+
+.total-green-area {
+    background: #d4edda;
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.info-additional {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.info-additional div {
+    margin-bottom: 6px;
 }
 
 /* Легенда */
@@ -327,30 +383,6 @@ input:checked + .slider:before {
     border: 1px solid #ccc;
 }
 
-/* Стили для парков (зелёные зоны) */
-.parks-layer-high {
-    fillColor: '#1a9850';
-    color: '#1a9850';
-    weight: 1;
-    opacity: 0.8;
-    fillOpacity: 0.6;
-}
-.parks-layer-medium {
-    fillColor: '#fee08b';
-    color: '#fee08b';
-    weight: 1;
-    opacity: 0.8;
-    fillOpacity: 0.6;
-}
-.parks-layer-low {
-    fillColor: '#d73027';
-    color: '#d73027';
-    weight: 1;
-    opacity: 0.8;
-    fillOpacity: 0.6;
-}
-
-/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     .controls {
         padding: 10px;
@@ -371,13 +403,9 @@ input:checked + .slider:before {
         font-size: 0.9rem;
     }
     
-    .stat-item {
-        min-width: 120px;
-        padding: 10px;
-    }
-    
-    .stat-value {
-        font-size: 1.1rem;
+    .info-panel {
+        width: 260px;
+        padding: 15px;
     }
     
     .legend {
@@ -435,7 +463,6 @@ input:checked + .slider:before {
     background: #45a049 !important;
 }
 
-/* Адаптация поиска для мобильных */
 @media (max-width: 600px) {
     .custom-search input {
         width: 160px !important;
@@ -447,7 +474,6 @@ input:checked + .slider:before {
     }
 }
 
-/* ========== СТИЛИ ДЛЯ МАРКЕРОВ ПОИСКА ========== */
 .search-marker {
     background: #4CAF50;
     color: white;
@@ -471,7 +497,6 @@ input:checked + .slider:before {
     100% { transform: scale(1.2); opacity: 0; }
 }
 
-/* ========== СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ ОКОН ========== */
 .leaflet-popup-content {
     min-width: 200px;
     font-size: 13px;

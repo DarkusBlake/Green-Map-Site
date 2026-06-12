@@ -1,6 +1,3 @@
-// js/ui.js
-// Управление UI элементами
-
 window.UI = (function() {
     let infoPanel, loadingSpinner;
     
@@ -26,12 +23,13 @@ window.UI = (function() {
         
         const quality = props.calculated_quality;
         const qualityText = Utils.getQualityText(quality);
+        const totalGreenArea = (props.great_parks_area || 0) + (props.good_parks_area || 0) + (props.ok_parks_area || 0);
         
         infoPanel.innerHTML = `
             <div class="info-details">
                 <div class="info-title">
                     <i class="fas fa-building"></i> 
-                    Квартал ${props.quarter_id || 'N/A'}
+                    Квартал ${props.quarter_id || props.id || 'N/A'}
                 </div>
                 
                 <div class="info-stats">
@@ -58,25 +56,52 @@ window.UI = (function() {
                 
                 <div class="info-parks">
                     <h4><i class="fas fa-tree"></i> Зелёные зоны</h4>
+                    <div class="total-green-area">
+                        <i class="fas fa-leaf"></i> Общая площадь парков: <strong>${Math.round(totalGreenArea).toLocaleString()} м²</strong>
+                    </div>
                     <table class="parks-table">
                         <thead>
-                            <tr><th>Тип</th><th>Кол-во</th><th>Площадь</th></tr>
+                            <tr><th>Тип</th><th>Кол-во</th><th>Площадь (м²)</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td>🏆 Отличные</td><td>${props.great_parks_count || 0}</td><td>${Math.round(props.great_parks_area || 0).toLocaleString()} м²</td></tr>
-                            <tr><td>✅ Хорошие</td><td>${props.good_parks_count || 0}</td><td>${Math.round(props.good_parks_area || 0).toLocaleString()} м²</td></tr>
-                            <tr><td>🌿 Обычные</td><td>${props.ok_parks_count || 0}</td><td>${Math.round(props.ok_parks_area || 0).toLocaleString()} м²</td></tr>
+                            <tr><td>🏆 Отличные</td><td>${props.great_parks_count || 0}</td><td>${Math.round(props.great_parks_area || 0).toLocaleString()}</td></tr>
+                            <tr><td>✅ Хорошие</td><td>${props.good_parks_count || 0}</td><td>${Math.round(props.good_parks_area || 0).toLocaleString()}</td></tr>
+                            <tr><td>🌿 Обычные</td><td>${props.ok_parks_count || 0}</td><td>${Math.round(props.ok_parks_area || 0).toLocaleString()}</td></tr>
                         </tbody>
                     </table>
                 </div>
                 
                 <div class="info-additional">
                     <div><i class="fas fa-chart-line"></i> Плотность зелени: ${(props.population_density_per_green_zone || 0).toFixed(2)} чел/га</div>
-                    <div><i class="fas fa-leaf"></i> Покрытие парками: ${((((props.great_parks_area || 0) + (props.good_parks_area || 0) + (props.ok_parks_area || 0)) / (props.area || 1)) * 100).toFixed(1)}%</div>
+                    <div><i class="fas fa-percent"></i> Покрытие парками: ${((totalGreenArea / (props.area || 1)) * 100).toFixed(1)}%</div>
                 </div>
             </div>
         `;
         infoPanel.scrollTop = 0;
+    }
+    
+    function showParkInfo(props) {
+        if (!infoPanel) return;
+        const ndvi = props.ndvi ? props.ndvi.toFixed(3) : '?';
+        const area = props.area ? Math.round(props.area).toLocaleString() : '?';
+        infoPanel.innerHTML = `
+            <div class="info-details">
+                <div class="info-title">
+                    <i class="fas fa-tree"></i> 
+                    Зелёная зона
+                </div>
+                <div class="info-stats">
+                    <div class="info-stat-card">
+                        <div class="info-stat-number">${ndvi}</div>
+                        <div class="info-stat-label">NDVI индекс</div>
+                    </div>
+                    <div class="info-stat-card">
+                        <div class="info-stat-number">${area} м²</div>
+                        <div class="info-stat-label">Площадь</div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
     function showLightModeMessage() {
@@ -116,7 +141,6 @@ window.UI = (function() {
     }
     
     function showToast(message, duration = 3000) {
-        // Простое уведомление (можно расширить)
         console.log('[Toast]', message);
         alert(message);
     }
@@ -125,6 +149,7 @@ window.UI = (function() {
         init,
         showDefaultPanel,
         showQuarterInfo,
+        showParkInfo,
         showLightModeMessage,
         showError,
         showLoading,

@@ -1,8 +1,4 @@
-// js/utils.js
-// Вспомогательные функции
-
 window.Utils = (function() {
-    // Расчёт качества квартала
     function calculateQuality(feature) {
         const props = feature.properties;
         
@@ -64,9 +60,9 @@ window.Utils = (function() {
     
     function getColorByQuality(quality) {
         switch(quality) { 
-            case 1: return '#7fd968ff';
-            case 2: return '#35b444ff';
-            case 3: return '#096f0eff';
+            case 1: return '#a6c8ff';  // светло-синий
+            case 2: return '#4a8fe7';  // насыщенный синий
+            case 3: return '#0a4b8a';  // тёмно-синий
             default: return '#cccccc';
         }
     }
@@ -81,11 +77,12 @@ window.Utils = (function() {
     }
     
     function getParkStyle(feature) {
-        const quality = feature.properties.quality_class;
-        let color = '#aaaaaa';
-        if (quality === 'high') color = '#1a9850';
-        else if (quality === 'medium') color = '#fee08b';
-        else if (quality === 'low') color = '#d73027';
+        const ndvi = feature.properties.ndvi;
+        const intensity = (ndvi !== undefined && ndvi !== null) ? Math.min(1, Math.max(0, ndvi)) : 0.5;
+        const r = Math.floor(200 * (1 - intensity));
+        const g = Math.floor(100 + 155 * intensity);
+        const b = Math.floor(100 * (1 - intensity));
+        const color = `rgb(${r}, ${g}, ${b})`;
         return {
             fillColor: color,
             color: color,
