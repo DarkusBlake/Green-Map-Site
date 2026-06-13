@@ -61,20 +61,76 @@
         <div>Загрузка данных...</div>
     </div>
 
-    <!-- Легенда (исправлены цвета) -->
-    <div id="legend" class="legend">
-        <h4><i class="fas fa-key"></i> Легенда качества</h4>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #a6c8ff"></div>
-            <span>1 - Плохое качество</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #4a8fe7"></div>
-            <span>2 - Нормальное качество</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #0a4b8a"></div>
-            <span>3 - Хорошее качество</span>
+    <!-- Кнопка для вызова легенды -->
+    <button id="legend-btn" class="legend-btn">
+        <i class="fas fa-info-circle"></i> Легенда
+    </button>
+
+    <!-- Модальное окно легенды -->
+    <div id="legend-modal" class="legend-modal">
+        <div class="legend-modal-content">
+            <div class="legend-modal-header">
+                <h3><i class="fas fa-key"></i> Легенда карты</h3>
+                <span class="legend-close">&times;</span>
+            </div>
+            <div class="legend-modal-body">
+                <h4><i class="fas fa-building"></i> Кварталы</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #0a4b8a"></div>
+                    <span>3 - Хорошее качество</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4a8fe7"></div>
+                    <span>2 - Нормальное качество</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #a6c8ff"></div>
+                    <span>1 - Плохое качество</span>
+                </div>      
+                <h4><i class="fas fa-tree"></i> Зелёные зоны (по NDVI)</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #004d00"></div>
+                    <span>NDVI — Выдающийся</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #1a5c1a"></div>
+                    <span>NDVI — Хороший</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4CAF50"></div>
+                    <span>NDVI — Средний</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #8bc34a"></div>
+                    <span>NDVI — Низкий</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #cddc39"></div>
+                    <span>NDVI — Очень низкий</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #aaaaaa"></div>
+                    <span>Нет данных</span>
+                </div>
+                
+                <h4><i class="fas fa-road"></i> Дороги</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #221e18"></div>
+                    <span>Хорошее состояние</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #5a3a2b"></div>
+                    <span>Обычное состояние</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #684226"></div>
+                    <span>Плохое состояние</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #6c757d"></div>
+                    <span>Нет данных</span>
+                </div>
+            </div>
         </div>
     </div>
 

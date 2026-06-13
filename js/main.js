@@ -11,20 +11,29 @@
         UI.showLoading();
         await LayerManager.loadQuarters();
         await LayerManager.loadParks();
-        LayerManager.loadRoads(); // предзагрузка дорог (не добавляется на карту, пока чекбокс не включён)
+        LayerManager.loadRoads();
         UI.hideLoading();
         
         CityManager.onCityChange(async (cityId, cityData) => {
             UI.showLoading();
             UI.showDefaultPanel();
+            
+            // Сбрасываем все чекбоксы и скрываем слои
+            LayerManager.resetAllLayers();
+            
+            // Обновляем карту
             MapManager.updateViewForCity(cityId, cityData);
+            
+            // Перезагружаем данные (без автоматического добавления на карту)
             await LayerManager.loadQuarters();
             await LayerManager.loadParks();
-            LayerManager.loadRoads(); // перезагружаем дороги при смене города
+            await LayerManager.loadRoads();
+            
             UI.hideLoading();
         });
         
         setupModeButtons();
+        initLegend();
     });
     
     function setupModeButtons() {
@@ -45,6 +54,37 @@
                 });
             });
         }
+    }
+    
+    // Инициализация легенды (попап окно)
+    function initLegend() {
+        const legendBtn = document.getElementById('legend-btn');
+        const modal = document.getElementById('legend-modal');
+        const closeBtn = document.querySelector('.legend-close');
+        
+        if (!legendBtn || !modal) return;
+        
+        legendBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+            }
+        });
     }
     
     window.switchCity = (city) => CityManager.switchCity(city);

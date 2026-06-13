@@ -13,6 +13,7 @@ window.CityManager = (function() {
             zoom: 11,
             quartersUrl: 'https://backend-project-sber.onrender.com/quarters?city=moscow',
             parksUrl: 'https://backend-project-sber.onrender.com/green-zones?city=moscow',
+            roadsUrl: 'https://backend-project-sber.onrender.com/roads?city=moscow',
             viewBox: '37.3,55.9,37.9,55.6'
         },
         'ekaterinburg': {
@@ -21,6 +22,7 @@ window.CityManager = (function() {
             zoom: 12,
             quartersUrl: 'https://backend-project-sber.onrender.com/quarters?city=ekaterinburg',
             parksUrl: 'https://backend-project-sber.onrender.com/green-zones?city=ekaterinburg',
+            roadsUrl: 'https://backend-project-sber.onrender.com/roads?city=ekaterinburg',
             viewBox: '60.4,56.9,60.8,56.75'
         },
         'peter': {
@@ -29,6 +31,7 @@ window.CityManager = (function() {
             zoom: 11,
             quartersUrl: 'https://backend-project-sber.onrender.com/quarters?city=saint-petersburg',
             parksUrl: 'https://backend-project-sber.onrender.com/green-zones?city=saint-petersburg',
+            roadsUrl: 'https://backend-project-sber.onrender.com/roads?city=saint-petersburg',
             viewBox: '30.1,60.0,30.6,59.8'
         }
     };
