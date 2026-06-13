@@ -8,28 +8,54 @@
         LayerManager.init(map);
         SearchManager.init(map);
         
-        UI.showLoading();
+        UI.showLoading('Загрузка данных города...');
         await LayerManager.loadQuarters();
         await LayerManager.loadParks();
-        LayerManager.loadRoads();
+        await LayerManager.loadRoads();
+        
+        // Автоматически показываем кварталы и синхронизируем чекбокс
+        const quartersLayer = LayerManager.getQuartersLayer();
+        if (quartersLayer) {
+            map.addLayer(quartersLayer);
+            // Синхронизируем чекбокс с видимостью слоя
+            const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
+            if (quartersCheckbox) quartersCheckbox.checked = true;
+        }
+        
+        // Показываем приветственную панель при загрузке
+        UI.showDefaultPanel();
+        
         UI.hideLoading();
         
         CityManager.onCityChange(async (cityId, cityData) => {
-            UI.showLoading();
-            UI.showDefaultPanel();
+            UI.showLoading(`Переключение на ${cityData.name}...`);
+            UI.hideInfoPanel(); // Скрываем панель при смене города
             
-            // Сбрасываем все чекбоксы и скрываем слои
+            // Полностью очищаем все слои с карты и сбрасываем состояние
+            LayerManager.clearAllLayersFromMap();
             LayerManager.resetAllLayers();
             
-            // Обновляем карту
+            // Обновляем карту (центр и зум)
             MapManager.updateViewForCity(cityId, cityData);
             
-            // Перезагружаем данные (без автоматического добавления на карту)
+            // Загружаем данные для нового города
             await LayerManager.loadQuarters();
             await LayerManager.loadParks();
             await LayerManager.loadRoads();
             
+            // Автоматически показываем кварталы и синхронизируем чекбокс
+            const newQuartersLayer = LayerManager.getQuartersLayer();
+            if (newQuartersLayer) {
+                map.addLayer(newQuartersLayer);
+                const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
+                if (quartersCheckbox) quartersCheckbox.checked = true;
+            }
+            
+            // Сбрасываем флаг клика
+            window.isClickOnQuarter = false;
+            
             UI.hideLoading();
+            UI.showToast(`Город ${cityData.name} загружен`, 3000);
         });
         
         setupModeButtons();

@@ -12,6 +12,7 @@ window.MapManager = (function() {
     ];
     
     let serverIndex = 0;
+    let isLightMode = false;
     
     function init() {
         const cityData = CityManager.getCityData();
@@ -27,10 +28,10 @@ window.MapManager = (function() {
         // Контрол зума
         L.control.zoom({ position: 'topleft' }).addTo(map);
         
-        // Обработчик клика по карте
+        // Обработчик клика по карте - скрываем информационную панель
         map.on('click', function(e) {
             if (!window.isClickOnQuarter) {
-                if (window.UI) UI.showDefaultPanel();
+                if (window.UI) UI.hideInfoPanel();
             }
             setTimeout(() => { window.isClickOnQuarter = false; }, 50);
         });
@@ -38,7 +39,7 @@ window.MapManager = (function() {
         // Адаптация прозрачности кварталов при зуме
         map.on('zoomend', function() {
             const quartersLayer = window.LayerManager ? LayerManager.getQuartersLayer() : null;
-            if (quartersLayer) {
+            if (quartersLayer && map.hasLayer(quartersLayer)) {
                 const zoom = map.getZoom();
                 quartersLayer.eachLayer(function(layer) {
                     if (zoom < 12) {
@@ -90,6 +91,8 @@ window.MapManager = (function() {
     }
     
     function switchToLightMode() {
+        isLightMode = true;
+        
         if (currentTileLayer) {
             map.removeLayer(currentTileLayer);
         }
@@ -99,15 +102,23 @@ window.MapManager = (function() {
             maxZoom: 19
         }).addTo(map);
         
+        // Скрываем кварталы и синхронизируем чекбокс
         const quartersLayer = window.LayerManager ? LayerManager.getQuartersLayer() : null;
+        const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
+        
         if (quartersLayer && map.hasLayer(quartersLayer)) {
             map.removeLayer(quartersLayer);
+            if (quartersCheckbox && quartersCheckbox.checked) {
+                quartersCheckbox.checked = false;
+            }
         }
         
         if (window.UI) UI.showLightModeMessage();
     }
     
     function switchToGreenMode() {
+        isLightMode = false;
+        
         map.eachLayer(layer => {
             if (layer instanceof L.TileLayer && layer._url && layer._url.includes('cartocdn')) {
                 map.removeLayer(layer);
@@ -116,13 +127,19 @@ window.MapManager = (function() {
         
         loadTileServer(0);
         
+        // Показываем кварталы только если чекбокс включён
         const quartersLayer = window.LayerManager ? LayerManager.getQuartersLayer() : null;
-        const isChecked = document.getElementById('layer-quarters-checkbox')?.checked;
-        if (quartersLayer && isChecked && !map.hasLayer(quartersLayer)) {
+        const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
+        
+        if (quartersLayer && quartersCheckbox && quartersCheckbox.checked && !map.hasLayer(quartersLayer)) {
             map.addLayer(quartersLayer);
         }
         
-        if (window.UI) UI.showDefaultPanel();
+        if (window.UI) UI.hideInfoPanel();
+    }
+    
+    function isLightModeActive() {
+        return isLightMode;
     }
     
     return { 
@@ -130,6 +147,7 @@ window.MapManager = (function() {
         getMap, 
         updateViewForCity,
         switchToLightMode,
-        switchToGreenMode
+        switchToGreenMode,
+        isLightModeActive
     };
 })();

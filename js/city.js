@@ -56,6 +56,11 @@ window.CityManager = (function() {
         
         currentCity = cityId;
         
+        // Очищаем метки поиска при смене города
+        if (window.SearchManager && window.SearchManager.clearSearchMarkers) {
+            window.SearchManager.clearSearchMarkers();
+        }
+        
         // Обновляем активную кнопку
         document.querySelectorAll('.city-btn').forEach(btn => {
             btn.classList.remove('active');

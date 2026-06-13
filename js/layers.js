@@ -9,6 +9,31 @@ window.LayerManager = (function() {
     function init(mapInstance) {
         map = mapInstance;
         setupCheckboxes();
+        adjustLegendButtonPosition();
+        
+        // Следим за изменениями размера панели
+        window.addEventListener('resize', () => adjustLegendButtonPosition());
+        
+        // Используем MutationObserver для отслеживания изменений панели
+        const layersPanel = document.getElementById('layers-panel');
+        if (layersPanel) {
+            const observer = new MutationObserver(() => adjustLegendButtonPosition());
+            observer.observe(layersPanel, { attributes: true, childList: true, subtree: true });
+        }
+    }
+    
+    function adjustLegendButtonPosition() {
+        const legendBtn = document.getElementById('legend-btn');
+        const layersPanel = document.getElementById('layers-panel');
+        
+        if (legendBtn && layersPanel) {
+            const panelHeight = layersPanel.offsetHeight;
+            const bottomOffset = 20;
+            const gap = 10;
+            
+            legendBtn.style.bottom = (panelHeight + bottomOffset + gap) + 'px';
+            legendBtn.style.left = '20px';
+        }
     }
     
     function setupCheckboxes() {
@@ -19,17 +44,27 @@ window.LayerManager = (function() {
         if (quartersCheckbox) {
             quartersCheckbox.addEventListener('change', (e) => {
                 if (quartersLayer) {
-                    if (e.target.checked) map.addLayer(quartersLayer);
-                    else map.removeLayer(quartersLayer);
+                    if (e.target.checked) {
+                        map.addLayer(quartersLayer);
+                    } else {
+                        map.removeLayer(quartersLayer);
+                    }
                 }
             });
         }
         
         if (parksCheckbox) {
-            parksCheckbox.addEventListener('change', (e) => {
-                if (parksLayer) {
-                    if (e.target.checked) map.addLayer(parksLayer);
-                    else map.removeLayer(parksLayer);
+            parksCheckbox.addEventListener('change', async (e) => {
+                if (e.target.checked) {
+                    UI.showLoading('Загрузка парков...');
+                    if (!parksLayer) await loadParks();
+                    if (parksLayer) {
+                        map.addLayer(parksLayer);
+                        UI.showToast('Слой парков загружен', 2000);
+                    }
+                    UI.hideLoading();
+                } else {
+                    if (parksLayer) map.removeLayer(parksLayer);
                 }
             });
         }
@@ -37,8 +72,13 @@ window.LayerManager = (function() {
         if (roadsCheckbox) {
             roadsCheckbox.addEventListener('change', async (e) => {
                 if (e.target.checked) {
+                    UI.showLoading('Загрузка дорог...');
                     if (!roadsLayer) await loadRoads();
-                    if (roadsLayer) map.addLayer(roadsLayer);
+                    if (roadsLayer) {
+                        map.addLayer(roadsLayer);
+                        UI.showToast('Слой дорог загружен', 2000);
+                    }
+                    UI.hideLoading();
                 } else {
                     if (roadsLayer) map.removeLayer(roadsLayer);
                 }
@@ -46,31 +86,60 @@ window.LayerManager = (function() {
         }
     }
     
-    // Функция для сброса всех чекбоксов и скрытия слоёв
+    // Функция для полной очистки всех слоёв с карты
+    function clearAllLayersFromMap() {
+        if (quartersLayer && map.hasLayer(quartersLayer)) {
+            map.removeLayer(quartersLayer);
+        }
+        if (parksLayer && map.hasLayer(parksLayer)) {
+            map.removeLayer(parksLayer);
+        }
+        if (roadsLayer && map.hasLayer(roadsLayer)) {
+            map.removeLayer(roadsLayer);
+        }
+    }
+    
+    // Функция для полного сброса (очистка данных и чекбоксов)
     function resetAllLayers() {
         const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
         const parksCheckbox = document.getElementById('layer-parks-checkbox');
         const roadsCheckbox = document.getElementById('layer-roads-checkbox');
         
+        // Убираем все слои с карты
+        clearAllLayersFromMap();
+        
+        // Сбрасываем чекбоксы
         if (quartersCheckbox && quartersCheckbox.checked) {
             quartersCheckbox.checked = false;
-            if (quartersLayer && map.hasLayer(quartersLayer)) map.removeLayer(quartersLayer);
         }
-        
         if (parksCheckbox && parksCheckbox.checked) {
             parksCheckbox.checked = false;
-            if (parksLayer && map.hasLayer(parksLayer)) map.removeLayer(parksLayer);
         }
-        
         if (roadsCheckbox && roadsCheckbox.checked) {
             roadsCheckbox.checked = false;
-            if (roadsLayer && map.hasLayer(roadsLayer)) map.removeLayer(roadsLayer);
+        }
+        
+        // Очищаем ссылки на слои, чтобы при следующей загрузке создались новые
+        quartersLayer = null;
+        parksLayer = null;
+        roadsLayer = null;
+        currentFeatures = [];
+    }
+    
+    // Синхронизация состояния чекбокса кварталов с видимостью слоя
+    function syncQuartersCheckbox() {
+        const quartersCheckbox = document.getElementById('layer-quarters-checkbox');
+        if (quartersCheckbox && quartersLayer) {
+            const isOnMap = map.hasLayer(quartersLayer);
+            if (quartersCheckbox.checked !== isOnMap) {
+                quartersCheckbox.checked = isOnMap;
+            }
         }
     }
     
     async function loadQuarters() {
         try {
-            UI.showLoading();
+            UI.showLoading('Загрузка кварталов...');
             const cityData = CityManager.getCityData();
             const response = await fetch(cityData.quartersUrl);
             const data = await response.json();
@@ -135,6 +204,7 @@ window.LayerManager = (function() {
             });
             
             UI.hideLoading();
+            UI.showToast('Кварталы загружены', 2000);
             return quartersLayer;
             
         } catch (err) {
@@ -192,6 +262,7 @@ window.LayerManager = (function() {
             
         } catch (err) {
             console.error("Ошибка загрузки парков:", err);
+            UI.showError('Не удалось загрузить парки');
             return null;
         }
     }
@@ -208,6 +279,53 @@ window.LayerManager = (function() {
             // Только для Москвы меняем координаты местами
             const needSwapCoords = cityData.name === 'Москва';
             
+            // Функция для получения толщины линии в зависимости от зума
+            const getRoadWeight = (zoom) => {
+                if (zoom >= 16) return 6;
+                if (zoom >= 14) return 4;
+                if (zoom >= 12) return 2.5;
+                if (zoom >= 10) return 1.5;
+                return 1;
+            };
+            
+            // Функция для получения стиля дороги
+            const getRoadStyle = (feature, zoom) => {
+                const props = feature.properties;
+                const good = props.good_num || 0;
+                const regular = props.regular_num || 0;
+                const bad = props.bad_num || 0;
+                
+                let maxValue = Math.max(good, regular, bad);
+                
+                if (maxValue === 0) {
+                    return { color: '#6c757d', weight: getRoadWeight(zoom), opacity: 0.9 };
+                }
+                
+                const candidates = [];
+                if (good === maxValue) candidates.push('good');
+                if (regular === maxValue) candidates.push('regular');
+                if (bad === maxValue) candidates.push('bad');
+                
+                let dominantCategory;
+                if (candidates.length > 1) {
+                    if (candidates.includes('bad')) dominantCategory = 'bad';
+                    else if (candidates.includes('regular')) dominantCategory = 'regular';
+                    else dominantCategory = 'good';
+                } else {
+                    dominantCategory = candidates[0];
+                }
+                
+                let color;
+                switch (dominantCategory) {
+                    case 'good': color = '#3acea1'; break;
+                    case 'regular': color = '#FF8F00'; break;
+                    case 'bad': color = '#D32F2F'; break;
+                    default: color = '#6c757d';
+                }
+                
+                return { color: color, weight: getRoadWeight(zoom), opacity: 0.9 };
+            };
+            
             roadsLayer = L.geoJSON(data, {
                 coordsToLatLng: function(coords) {
                     if (needSwapCoords) {
@@ -217,59 +335,50 @@ window.LayerManager = (function() {
                     }
                 },
                 style: function(feature) {
-                    const props = feature.properties;
-                    const good = props.good_num || 0;
-                    const regular = props.regular_num || 0;
-                    const bad = props.bad_num || 0;
-                    
-                    let maxValue = Math.max(good, regular, bad);
-                    
-                    if (maxValue === 0) {
-                        return { color: '#6c757d', weight: 3, opacity: 0.8 };
-                    }
-                    
-                    const candidates = [];
-                    if (good === maxValue) candidates.push('good');
-                    if (regular === maxValue) candidates.push('regular');
-                    if (bad === maxValue) candidates.push('bad');
-                    
-                    let dominantCategory;
-                    if (candidates.length > 1) {
-                        if (candidates.includes('bad')) dominantCategory = 'bad';
-                        else if (candidates.includes('regular')) dominantCategory = 'regular';
-                        else dominantCategory = 'good';
-                    } else {
-                        dominantCategory = candidates[0];
-                    }
-                    
-                    switch (dominantCategory) {
-                        case 'good': return { color: '#221e18', weight: 3, opacity: 0.8 }; 
-                        case 'regular': return { color: '#5a3a2b', weight: 3, opacity: 0.8 }; 
-                        case 'bad': return { color: '#684226', weight: 3, opacity: 0.8 }; 
-                        default: return { color: '#6c757d', weight: 3, opacity: 0.8 };
-                    }
+                    const zoom = map.getZoom();
+                    return getRoadStyle(feature, zoom);
                 },
                 onEachFeature: function(feature, layer) {
                     const props = feature.properties;
                     const good = props.good_num || 0;
                     const regular = props.regular_num || 0;
                     const bad = props.bad_num || 0;
-                    layer.bindTooltip(`🚦 Дорога | Хороших: ${good} | Обычных: ${regular} | Плохих: ${bad}`, { sticky: true });
+                    layer.bindTooltip(`🚦 Дорога | 🟢 Хороших: ${good} | 🟠 Обычных: ${regular} | 🔴 Плохих: ${bad}`, { sticky: true });
                 }
             });
+            
+            // Добавляем обработчик события zoomend для динамического обновления стилей
+            if (map) {
+                const updateRoadsStyle = () => {
+                    if (!roadsLayer || !map.hasLayer(roadsLayer)) return;
+                    const zoom = map.getZoom();
+                    roadsLayer.eachLayer(function(layer) {
+                        if (layer.feature) {
+                            const newStyle = getRoadStyle(layer.feature, zoom);
+                            layer.setStyle(newStyle);
+                        }
+                    });
+                };
+                
+                map.on('zoomend', updateRoadsStyle);
+                // Сохраняем обработчик для возможного удаления
+                if (window._roadZoomHandler) {
+                    map.off('zoomend', window._roadZoomHandler);
+                }
+                window._roadZoomHandler = updateRoadsStyle;
+            }
             
             return roadsLayer;
             
         } catch (err) {
             console.error("Ошибка загрузки дорог:", err);
             UI.showError('Не удалось загрузить слой дорог');
+            return null;
         }
     }
     
     function hideAllLayers() {
-        if (quartersLayer && map.hasLayer(quartersLayer)) map.removeLayer(quartersLayer);
-        if (parksLayer && map.hasLayer(parksLayer)) map.removeLayer(parksLayer);
-        if (roadsLayer && map.hasLayer(roadsLayer)) map.removeLayer(roadsLayer);
+        clearAllLayersFromMap();
     }
     
     function getQuartersLayer() { return quartersLayer; }
@@ -282,7 +391,10 @@ window.LayerManager = (function() {
         loadParks,
         loadRoads,
         resetAllLayers,
+        clearAllLayersFromMap,
         hideAllLayers,
+        syncQuartersCheckbox,
+        adjustLegendButtonPosition,
         getQuartersLayer,
         getParksLayer,
         getCurrentFeatures

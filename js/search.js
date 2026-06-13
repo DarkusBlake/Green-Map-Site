@@ -1,5 +1,7 @@
 window.SearchManager = (function() {
     let map = null;
+    let searchMarkersLayer = null;
+    let searchControl = null;
     
     function init(mapInstance) {
         map = mapInstance;
@@ -39,9 +41,22 @@ window.SearchManager = (function() {
                 this.button.style.borderRadius = '3px';
                 this.button.style.cursor = 'pointer';
                 
+                // Кнопка сброса меток
+                this.clearButton = L.DomUtil.create('button', '', container);
+                this.clearButton.innerHTML = '🗑️';
+                this.clearButton.style.padding = '8px 12px';
+                this.clearButton.style.backgroundColor = '#dc3545';
+                this.clearButton.style.color = 'white';
+                this.clearButton.style.border = 'none';
+                this.clearButton.style.borderRadius = '3px';
+                this.clearButton.style.cursor = 'pointer';
+                this.clearButton.style.fontSize = '14px';
+                this.clearButton.title = 'Сбросить метки поиска';
+                
                 L.DomEvent.disableClickPropagation(container);
                 
                 this.button.onclick = () => this.search();
+                this.clearButton.onclick = () => this.clearMarkers();
                 this.input.onkeypress = (e) => {
                     if (e.key === 'Enter') this.search();
                 };
@@ -49,15 +64,23 @@ window.SearchManager = (function() {
                 return container;
             },
             
+            clearMarkers: function() {
+                if (searchMarkersLayer && map) {
+                    map.removeLayer(searchMarkersLayer);
+                    searchMarkersLayer = null;
+                }
+                this.input.value = '';
+                if (window.UI) UI.showToast('Метки поиска удалены', 2000);
+            },
+            
             search: async function() {
                 const query = this.input.value.trim();
                 if (!query) return;
                 
-                UI.showLoading();
+                if (window.UI) UI.showLoading();
                 const cityData = CityManager.getCityData();
-                const viewBox = cityData.viewBox; // например "37.3,55.9,37.9,55.6"
+                const viewBox = cityData.viewBox;
                 
-                // 1. Пробуем Nominatim с ограничением по viewbox
                 let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1&accept-language=ru&countrycodes=ru&dedupe=1&bounded=1`;
                 if (viewBox) url += `&viewbox=${viewBox}`;
                 
@@ -69,18 +92,17 @@ window.SearchManager = (function() {
                     const data = await response.json();
                     
                     if (data && data.length > 0) {
-                        UI.hideLoading();
+                        if (window.UI) UI.hideLoading();
                         showResults(data);
                         return;
                     }
                     
-                    // Если ничего не найдено, пробуем Photon
                     console.log('Nominatim не дал результатов, пробуем Photon');
                     const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=10&lang=ru&bbox=${viewBox || ''}`;
                     const photonResp = await fetch(photonUrl);
                     if (!photonResp.ok) throw new Error('Photon error');
                     const photonData = await photonResp.json();
-                    UI.hideLoading();
+                    if (window.UI) UI.hideLoading();
                     
                     if (!photonData.features || photonData.features.length === 0) {
                         alert('Ничего не найдено в выбранном городе');
@@ -89,20 +111,31 @@ window.SearchManager = (function() {
                     showPhotonResults(photonData.features);
                     
                 } catch (err) {
-                    UI.hideLoading();
+                    if (window.UI) UI.hideLoading();
                     console.error(err);
                     alert('Ошибка поиска. Попробуйте другой запрос.');
                 }
             }
         });
         
-        const searchControl = new SearchControl();
+        searchControl = new SearchControl();
         searchControl.addTo(map);
     }
     
+    function clearSearchMarkers() {
+        if (searchMarkersLayer && map) {
+            map.removeLayer(searchMarkersLayer);
+            searchMarkersLayer = null;
+        }
+        if (searchControl && searchControl.input) {
+            searchControl.input.value = '';
+        }
+        if (window.UI) UI.showToast('Метки поиска сброшены', 2000);
+    }
+    
     function showResults(results) {
-        if (window.searchMarkersLayer) map.removeLayer(window.searchMarkersLayer);
-        window.searchMarkersLayer = L.layerGroup().addTo(map);
+        if (searchMarkersLayer) map.removeLayer(searchMarkersLayer);
+        searchMarkersLayer = L.layerGroup().addTo(map);
         
         results.forEach((result) => {
             const lat = parseFloat(result.lat);
@@ -112,7 +145,7 @@ window.SearchManager = (function() {
                 <strong>${result.name || 'Место'}</strong><br>
                 <small>${displayName.substring(0, 100)}</small><br>
                 <button onclick="window.zoomToLocation(${lat}, ${lon})">Перейти</button>
-            `).addTo(window.searchMarkersLayer);
+            `).addTo(searchMarkersLayer);
         });
         
         const first = results[0];
@@ -120,8 +153,8 @@ window.SearchManager = (function() {
     }
     
     function showPhotonResults(features) {
-        if (window.searchMarkersLayer) map.removeLayer(window.searchMarkersLayer);
-        window.searchMarkersLayer = L.layerGroup().addTo(map);
+        if (searchMarkersLayer) map.removeLayer(searchMarkersLayer);
+        searchMarkersLayer = L.layerGroup().addTo(map);
         
         features.forEach((feature) => {
             const coords = feature.geometry.coordinates;
@@ -133,7 +166,7 @@ window.SearchManager = (function() {
                 <strong>${name}</strong><br>
                 <small>${street}</small><br>
                 <button onclick="window.zoomToLocation(${lat}, ${lon})">Перейти</button>
-            `).addTo(window.searchMarkersLayer);
+            `).addTo(searchMarkersLayer);
         });
         
         const first = features[0];
@@ -147,5 +180,5 @@ window.SearchManager = (function() {
         setTimeout(() => map.removeLayer(marker), 3000);
     };
     
-    return { init };
+    return { init, clearSearchMarkers };
 })();
