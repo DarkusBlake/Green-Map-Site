@@ -290,7 +290,7 @@ window.LayerManager = (function() {
             if (roadsLayer) map.removeLayer(roadsLayer);
             
             // Только для Москвы меняем координаты местами
-            const needSwapCoords = cityData.name === 'Москва';
+            const needSwapCoords = false;
             
             // Функция для получения толщины линии в зависимости от зума
             const getRoadWeight = (zoom) => {
