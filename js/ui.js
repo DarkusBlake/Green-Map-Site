@@ -11,16 +11,91 @@ window.UI = (function() {
             loadingText.className = 'loading-text';
             loadingSpinner.appendChild(loadingText);
         }
+        
+        // Инициализируем мобильный фикс
+        initMobileFix();
+    }
+    
+    // Мобильный фикс для навигационной панели
+    function initMobileFix() {
+        function getNavigationBarHeight() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = /android/.test(userAgent);
+            
+            const screenHeight = window.screen.height;
+            const windowHeight = window.innerHeight;
+            const heightDiff = screenHeight - windowHeight;
+            
+            if (isAndroid && heightDiff > 0 && heightDiff < 200) {
+                console.log(`[Mobile Fix] Обнаружена навигация Android: разница ${heightDiff}px`);
+                return heightDiff;
+            }
+            
+            const hasSafeArea = CSS.supports('padding-bottom', 'env(safe-area-inset-bottom)');
+            if (hasSafeArea) {
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'position: fixed; bottom: 0; left: 0; width: 1px; height: 1px; padding-bottom: env(safe-area-inset-bottom); pointer-events: none; visibility: hidden;';
+                document.body.appendChild(testDiv);
+                const safeBottom = parseInt(getComputedStyle(testDiv).paddingBottom);
+                document.body.removeChild(testDiv);
+                
+                if (safeBottom > 0) {
+                    console.log(`[Mobile Fix] safe-area-inset-bottom: ${safeBottom}px`);
+                    return safeBottom;
+                }
+            }
+            
+            if (window.visualViewport) {
+                const vvHeight = window.visualViewport.height;
+                const winHeight = window.innerHeight;
+                const vvDiff = winHeight - vvHeight;
+                if (vvDiff > 0 && vvDiff < 150) {
+                    console.log(`[Mobile Fix] VisualViewport разница: ${vvDiff}px`);
+                    return vvDiff;
+                }
+            }
+            
+            if (isAndroid && window.innerWidth <= 768) {
+                return 48;
+            }
+            
+            return 0;
+        }
+        
+        function applySafeBottomOffset() {
+            const navHeight = getNavigationBarHeight();
+            document.documentElement.style.setProperty('--nav-bar-height', navHeight + 'px');
+            console.log(`[Mobile Fix] Применён отступ снизу: ${navHeight}px`);
+            
+            // Обновляем позицию кнопки легенды
+            if (window.LayerManager && window.LayerManager.adjustLegendButtonPosition) {
+                setTimeout(() => window.LayerManager.adjustLegendButtonPosition(), 10);
+            }
+        }
+        
+        window.addEventListener('resize', () => setTimeout(applySafeBottomOffset, 100));
+        window.addEventListener('orientationchange', () => setTimeout(applySafeBottomOffset, 200));
+        
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => setTimeout(applySafeBottomOffset, 100));
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applySafeBottomOffset);
+        } else {
+            applySafeBottomOffset();
+        }
+        
+        window.addEventListener('load', applySafeBottomOffset);
+        window.updateMobileSafeArea = applySafeBottomOffset;
     }
     
     // Создание панели информации
     function createInfoPanel() {
-        // Если панель уже существует, удаляем её
         if (infoPanel && infoPanel.parentNode) {
             infoPanel.parentNode.removeChild(infoPanel);
         }
         
-        // Создаём новую панель
         infoPanel = document.createElement('div');
         infoPanel.id = 'info-panel';
         infoPanel.className = 'info-panel';
@@ -60,7 +135,6 @@ window.UI = (function() {
             </div>
         `;
         
-        // Добавляем обработчик закрытия
         const closeBtn = infoPanel.querySelector('.close-info-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
@@ -132,7 +206,6 @@ window.UI = (function() {
             </div>
         `;
         
-        // Добавляем обработчик закрытия
         const closeBtn = infoPanel.querySelector('.close-info-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
@@ -172,7 +245,6 @@ window.UI = (function() {
             </div>
         `;
         
-        // Добавляем обработчик закрытия
         const closeBtn = infoPanel.querySelector('.close-info-btn');
         if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
@@ -236,7 +308,6 @@ window.UI = (function() {
         console.error('[UI Error]', message);
     }
     
-    // Очистка/закрытие панели (для совместимости с map.js)
     function clearInfoPanel() {
         removeInfoPanel();
     }

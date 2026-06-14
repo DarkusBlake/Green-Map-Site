@@ -26,6 +26,12 @@
     margin-bottom: 0;
 }
 
+/* CSS переменная для динамического отступа */
+:root {
+    --safe-bottom: 0px;
+    --nav-bar-height: 0px;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     height: 100vh;
@@ -106,7 +112,7 @@ body {
 /* Панель слоёв (инструменты) - в левом нижнем углу карты */
 .layers-panel {
     position: absolute;
-    bottom: 20px;
+    bottom: calc(20px + var(--nav-bar-height));
     left: 20px;
     background: rgba(255, 255, 255, 0.95);
     padding: 15px;
@@ -208,7 +214,7 @@ input:checked + .slider:before {
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 180px - var(--nav-bar-height));
     overflow-y: auto;
     border: 1px solid rgba(0, 0, 0, 0.08);
     font-family: 'Inter', sans-serif;
@@ -349,7 +355,7 @@ input:checked + .slider:before {
 /* Кнопка легенды - слева, над панелью инструментов */
 .legend-btn {
     position: absolute;
-    bottom: calc(20px + 180px + 15px);
+    bottom: calc(20px + 180px + 15px + var(--nav-bar-height));
     left: 20px;
     background: #2c3e50;
     color: white;
@@ -625,21 +631,20 @@ input:checked + .slider:before {
     .info-panel {
         width: 260px;
         padding: 15px;
-        max-height: calc(100vh - 200px);
+        max-height: calc(100vh - 200px - var(--nav-bar-height));
         right: 10px;
         top: 10px;
     }
     
     .layers-panel {
-        bottom: 10px;
+        bottom: calc(10px + var(--nav-bar-height));
         left: 10px;
         min-width: 160px;
         padding: 10px;
     }
     
-    /* Корректируем положение кнопки легенды под мобильные экраны */
     .legend-btn {
-        bottom: calc(10px + 160px + 10px);
+        bottom: calc(10px + 160px + 10px + var(--nav-bar-height));
         left: 10px;
         padding: 10px 16px;
         font-size: 12px;
@@ -684,90 +689,28 @@ input:checked + .slider:before {
     }
 }
 
-/* ============================================
-   НОВЫЕ ПРАВИЛА ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ
-   Учёт системной навигации (safe-area-inset-bottom)
-   ============================================ */
-
-/* Для устройств с вырезом/навигационной панелью (iPhone X и новее, современные Android) */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-    
-    /* Панель слоёв (инструменты) - поднимаем выше системной навигации */
-    .layers-panel {
-        bottom: calc(10px + env(safe-area-inset-bottom));
-        left: max(10px, env(safe-area-inset-left));
-    }
-    
-    /* Кнопка легенды - позиционируем относительно панели слоёв с учётом безопасной зоны */
-    .legend-btn {
-        bottom: calc(10px + 160px + env(safe-area-inset-bottom));
-        left: max(10px, env(safe-area-inset-left));
-    }
-    
-    /* Информационная панель на мобильных - добавляем отступ снизу при прокрутке */
-    .info-panel {
-        max-height: calc(100vh - 180px - env(safe-area-inset-bottom));
-    }
-}
-
-/* Специально для телефонов с очень большой навигационной областью (Android с жестами) */
-@media (max-width: 768px) and (min-height: 700px) {
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-        .layers-panel {
-            bottom: calc(15px + env(safe-area-inset-bottom));
-        }
-        
-        .legend-btn {
-            bottom: calc(15px + 160px + env(safe-area-inset-bottom));
-        }
-    }
-}
-
-/* Для очень маленьких экранов (iPhone SE, старые Android) - увеличиваем отступы */
+/* Защита от перекрытия на совсем маленьких экранах */
 @media (max-width: 380px) {
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-        .layers-panel {
-            bottom: calc(5px + env(safe-area-inset-bottom));
-            padding: 8px;
-            min-width: 140px;
-        }
-        
-        .legend-btn {
-            bottom: calc(5px + 140px + env(safe-area-inset-bottom));
-            padding: 8px 14px;
-            font-size: 11px;
-        }
-        
-        .layer-item {
-            gap: 8px;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-        }
-        
-        .layers-panel h4 {
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-        }
+    .layers-panel {
+        bottom: calc(5px + var(--nav-bar-height));
+        padding: 8px;
+        min-width: 140px;
     }
-}
-
-/* Глобальное улучшение для body - обеспечиваем безопасную область снизу */
-body {
-    /* Запасной вариант для старых браузеров */
-    padding-bottom: 0;
-}
-
-/* Для устройств, поддерживающих safe-area, добавляем псевдо-отступ через постоянный элемент */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-    body::after {
-        content: '';
-        display: block;
-        height: env(safe-area-inset-bottom);
-        width: 100%;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        pointer-events: none;
-        z-index: 9999;
+    
+    .legend-btn {
+        bottom: calc(5px + 140px + 5px + var(--nav-bar-height));
+        padding: 8px 14px;
+        font-size: 11px;
+    }
+    
+    .layer-item {
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .layers-panel h4 {
+        margin-bottom: 8px;
+        font-size: 0.85rem;
     }
 }

@@ -28,11 +28,24 @@ window.LayerManager = (function() {
         
         if (legendBtn && layersPanel) {
             const panelHeight = layersPanel.offsetHeight;
+            const navBarHeight = parseInt(getComputedStyle(document.documentElement)
+                .getPropertyValue('--nav-bar-height')) || 0;
             const bottomOffset = 20;
             const gap = 10;
             
-            legendBtn.style.bottom = (panelHeight + bottomOffset + gap) + 'px';
-            legendBtn.style.left = '20px';
+            // Базовая позиция с учётом навигационной панели
+            let legendBottom = panelHeight + bottomOffset + gap + navBarHeight;
+            
+            // Для мобильных устройств корректируем
+            if (window.innerWidth <= 768) {
+                const mobileBottomOffset = 10;
+                legendBottom = panelHeight + mobileBottomOffset + gap + navBarHeight;
+                legendBtn.style.left = '10px';
+            } else {
+                legendBtn.style.left = '20px';
+            }
+            
+            legendBtn.style.bottom = legendBottom + 'px';
         }
     }
     
