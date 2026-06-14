@@ -683,3 +683,91 @@ input:checked + .slider:before {
         padding: 6px 10px !important;
     }
 }
+
+/* ============================================
+   НОВЫЕ ПРАВИЛА ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ
+   Учёт системной навигации (safe-area-inset-bottom)
+   ============================================ */
+
+/* Для устройств с вырезом/навигационной панелью (iPhone X и новее, современные Android) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    
+    /* Панель слоёв (инструменты) - поднимаем выше системной навигации */
+    .layers-panel {
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        left: max(10px, env(safe-area-inset-left));
+    }
+    
+    /* Кнопка легенды - позиционируем относительно панели слоёв с учётом безопасной зоны */
+    .legend-btn {
+        bottom: calc(10px + 160px + env(safe-area-inset-bottom));
+        left: max(10px, env(safe-area-inset-left));
+    }
+    
+    /* Информационная панель на мобильных - добавляем отступ снизу при прокрутке */
+    .info-panel {
+        max-height: calc(100vh - 180px - env(safe-area-inset-bottom));
+    }
+}
+
+/* Специально для телефонов с очень большой навигационной областью (Android с жестами) */
+@media (max-width: 768px) and (min-height: 700px) {
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .layers-panel {
+            bottom: calc(15px + env(safe-area-inset-bottom));
+        }
+        
+        .legend-btn {
+            bottom: calc(15px + 160px + env(safe-area-inset-bottom));
+        }
+    }
+}
+
+/* Для очень маленьких экранов (iPhone SE, старые Android) - увеличиваем отступы */
+@media (max-width: 380px) {
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .layers-panel {
+            bottom: calc(5px + env(safe-area-inset-bottom));
+            padding: 8px;
+            min-width: 140px;
+        }
+        
+        .legend-btn {
+            bottom: calc(5px + 140px + env(safe-area-inset-bottom));
+            padding: 8px 14px;
+            font-size: 11px;
+        }
+        
+        .layer-item {
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .layers-panel h4 {
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+    }
+}
+
+/* Глобальное улучшение для body - обеспечиваем безопасную область снизу */
+body {
+    /* Запасной вариант для старых браузеров */
+    padding-bottom: 0;
+}
+
+/* Для устройств, поддерживающих safe-area, добавляем псевдо-отступ через постоянный элемент */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    body::after {
+        content: '';
+        display: block;
+        height: env(safe-area-inset-bottom);
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 9999;
+    }
+}
